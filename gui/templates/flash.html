@@ -1,0 +1,37 @@
+<html>
+  <head>
+    <title>ESP32 Flasher</title>
+    <script>
+      async function flash() {
+        const portName = document.getElementById("port").value;
+        const filePath = document.getElementById("filePath").value;
+        const command = `esptool.py --chip esp32 --port ${portName} --baud 921600 write_flash -z 0x1000 ${filePath}`;
+
+        const reader = new ReadableStream({
+          start(controller) {
+            controller.enqueue(command);
+            controller.close();
+          }
+        });
+
+        const port = await navigator.serial.requestPort({});
+        //const port = await response.port;
+        await port.open({ baudRate: 115200 });
+        const writer = port.writable.getWriter();
+        await writer.write(reader);
+        await writer.close();
+      }
+    </script>
+  </head>
+  <body>
+    <form>
+      Serial Port:
+      <input type="text" id="port" value="/dev/ttyUSB0">
+      <br>
+      File Path:
+      <input type="text" id="filePath" value="firmware.bin">
+      <br>
+      <button type="button" onclick="flash()">Flash ESP32</button>
+    </form>
+  </body>
+</html>
